@@ -252,6 +252,16 @@ $(MODULE_CLEANS):
 	clean
 
 ################################################################################
+# Startup Objects
+################################################################################
+
+# In some chip configurations, NuttX may not link vectors and other required
+# startup information during export. Instead, these objects are copied into
+# a separate directory.
+#
+STARTUP_OBJS = $(wildcard $(NUTTX_EXPORT_DIR)/startup/*.o)
+
+################################################################################
 # Libraries
 ################################################################################
 
@@ -509,7 +519,7 @@ $(PRODUCT_BIN):		$(PRODUCT_ELF)
 	$(call SYM_TO_BIN,$<,$@)
 
 $(PRODUCT_ELF):		$(OBJS) $(MODULE_OBJS) $(LIBRARY_LIBS) $(GLOBAL_DEPS) $(LINK_DEPS) $(MODULE_MKFILES)
-	$(call LINK,$@,$(OBJS) $(MODULE_OBJS) $(LIBRARY_LIBS))
+	$(call LINK,$@,$(OBJS) $(MODULE_OBJS) $(STARTUP_OBJS) $(LIBRARY_LIBS))
 
 #
 # Utility rules
