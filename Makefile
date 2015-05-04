@@ -53,13 +53,13 @@ export GIT_DESC
 #
 # Canned firmware configurations that we (know how to) build.
 #
-KNOWN_CONFIGS		:= trifle_default #$(subst config_,,$(basename $(notdir $(wildcard $(PX4_MK_DIR)config_*.mk))))
+KNOWN_CONFIGS		:= trifle_default#$(subst config_,,$(basename $(notdir $(wildcard $(PX4_MK_DIR)config_*.mk))))
 CONFIGS			?= $(KNOWN_CONFIGS)
 
 #
 # Boards that we (know how to) build NuttX export kits for.
 #
-KNOWN_BOARDS		:= trifle #$(subst board_,,$(basename $(notdir $(wildcard $(PX4_MK_DIR)board_*.mk))))
+KNOWN_BOARDS		:= trifle#$(subst board_,,$(basename $(notdir $(wildcard $(PX4_MK_DIR)board_*.mk))))
 BOARDS			?= $(KNOWN_BOARDS)
 
 #
