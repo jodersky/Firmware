@@ -471,6 +471,7 @@ endif
 #
 PRODUCT_BUNDLE		 = $(WORK_DIR)firmware.px4
 PRODUCT_BIN		 = $(WORK_DIR)firmware.bin
+PRODUCT_HEX		 = $(WORK_DIR)firmware.hex
 PRODUCT_ELF		 = $(WORK_DIR)firmware.elf
 PRODUCT_PARAMXML = $(WORK_DIR)/parameters.xml
 
@@ -501,7 +502,7 @@ $(filter %.S.o,$(OBJS)): $(WORK_DIR)%.S.o: %.S $(GLOBAL_DEPS)
 # Built product rules
 #
 
-$(PRODUCT_BUNDLE):	$(PRODUCT_BIN)
+$(PRODUCT_BUNDLE):	$(PRODUCT_BIN) $(PRODUCT_HEX)
 	@$(ECHO) %% Generating $@
 ifdef GEN_PARAM_XML
 	$(Q) $(PYTHON) $(PX4_BASE)/Tools/px_process_params.py --src-path $(PX4_BASE)/src --board CONFIG_ARCH_BOARD_$(CONFIG_BOARD) --xml
@@ -518,6 +519,9 @@ endif
 $(PRODUCT_BIN):		$(PRODUCT_ELF)
 	$(call SYM_TO_BIN,$<,$@)
 
+$(PRODUCT_HEX):	$(PRODUCT_ELF)
+	$(call SYM_TO_HEX,$<,$@)
+
 $(PRODUCT_ELF):		$(OBJS) $(MODULE_OBJS) $(LIBRARY_LIBS) $(GLOBAL_DEPS) $(LINK_DEPS) $(MODULE_MKFILES)
 	$(call LINK,$@,$(OBJS) $(MODULE_OBJS) $(STARTUP_OBJS) $(LIBRARY_LIBS))
 
@@ -532,7 +536,8 @@ upload:	$(PRODUCT_BUNDLE) $(PRODUCT_BIN)
 		CONFIG=$(CONFIG) \
 		BOARD=$(BOARD) \
 		BUNDLE=$(PRODUCT_BUNDLE) \
-		BIN=$(PRODUCT_BIN)
+		BIN=$(PRODUCT_BIN) \
+		HEX=$(PRODUCT_HEX)
 
 .PHONY: clean
 clean:			$(MODULE_CLEANS)

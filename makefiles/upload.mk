@@ -36,6 +36,9 @@ upload-serial-aerocore:
 upload-serial-px4-stm32f4discovery:	$(BUNDLE) $(UPLOADER)
 	$(Q) $(PYTHON) -u $(UPLOADER) --port $(SERIAL_PORTS) $(BUNDLE)
 
+upload-serial-trifle: $(HEX)
+	teensy_loader_cli -mmcu=mk20dx256 -w -v $(HEX)
+
 #
 # JTAG firmware uploading with OpenOCD
 #
