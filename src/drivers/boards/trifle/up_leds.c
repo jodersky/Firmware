@@ -40,9 +40,11 @@
 
 #include <nuttx/config.h>
 
+#include <arch/board/board.h>
 #include <stdbool.h>
 #include <debug.h>
-#include "up_internal.h"
+#include "kinetis_internal.h"
+#include "internal.h"
 
 /****************************************************************************
  * Definitions
@@ -80,9 +82,8 @@
  *
  ****************************************************************************/
 
-#include "kinetis_internal.h"
 
-#ifdef CONFIG_ARCH_LEDS
+//#ifdef CONFIG_ARCH_LEDS
 
 #define GPIO_LED0 (PIN_PORTC | PIN5 | GPIO_HIGHDRIVE | GPIO_OUTPUT_ONE)
 #define GPIO_LED1 (PIN_PORTD | PIN1 | GPIO_HIGHDRIVE | GPIO_OUTPUT_ONE)
@@ -130,7 +131,7 @@ static void set_led(int led, bool value)
 	}
 }
 
-void board_led_initialize(void)
+__EXPORT void led_init(void)
 {
 	volatile unsigned long counter = 0;
 
@@ -174,22 +175,15 @@ void board_led_initialize(void)
 	}
 }
 
-/****************************************************************************
- * Name: board_led_on
- ****************************************************************************/
-
-__EXPORT void board_led_on(int led)
+/*
+static void led_on(int led)
 {
-	set_led(led, true);
+  set_led(led, true);
 }
 
-/****************************************************************************
- * Name: board_led_off
- ****************************************************************************/
-
-__EXPORT void board_led_off(int led)
+static void led_off(int led)
 {
   set_led(led, false);
-}
+  }*/
 
-#endif /* CONFIG_ARCH_LEDS */
+//#endif /* CONFIG_ARCH_LEDS */

@@ -41,7 +41,7 @@
 #include <debug.h>
 
 #include <arch/board/board.h>
-#include "up_internal.h"
+#include "internal.h"
 
 
 /************************************************************************************
@@ -68,5 +68,5 @@
 
 __EXPORT void kinetis_boardinitialize(void)
 {
-  board_led_initialize();
+  led_init();
 }
