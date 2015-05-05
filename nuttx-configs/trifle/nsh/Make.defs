@@ -69,8 +69,15 @@ ifeq ($(CONFIG_DEBUG_SYMBOLS),y)
   ARCHOPTIMIZATION = -g
 endif
 
+
+# XXX WARNING
+#
+# The below optimization level, -Os, is very important. If this level
+# is not used, the clock configuration funtion in NuttX will never return!
+# See kinesis_setdividers in NuttX/nuttx/arch/arm/src/kinetis/kinetis_clockconfig.c
+#
 ifneq ($(CONFIG_DEBUG_NOOPT),y)
-  ARCHOPTIMIZATION += $(MAXOPTIMIZATION) -fno-strict-aliasing -fno-strength-reduce -fomit-frame-pointer
+  ARCHOPTIMIZATION += -Os -fno-strict-aliasing -fno-strength-reduce -fomit-frame-pointer
 endif
 
 ARCHCFLAGS = -fno-builtin
