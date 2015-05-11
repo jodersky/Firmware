@@ -11,8 +11,9 @@ ROMFS_ROOT	 = $(PX4_BASE)/ROMFS/px4fmu_trifle
 # Board support modules
 #
 MODULES		+= drivers/boards/trifle
-MODULES		+= modules/helloworld
-#MODULES		+= drivers/device
+MODULES		+= examples/pwm
+MODULES		+= drivers/device
+MODULES		+= drivers/kinetis
 #MODULES		+= drivers/stm32
 #MODULES		+= drivers/stm32/adc
 #MODULES		+= drivers/stm32/tone_alarm
