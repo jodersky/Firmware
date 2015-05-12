@@ -69,7 +69,7 @@
      regval = getreg32(timer->scgc);
      putreg32(regval | timer->scgc_enable, timer->scgc); // enable clock signal
      up_pwm_servo_set_rate_group_update(i, 50); // 50Hz default
-       
+     
    }
 
    for (size_t i = 0; i < PWM_SERVO_MAX_CHANNELS; ++i) {
@@ -132,7 +132,9 @@ void up_pwm_servo_arm(bool armed)
 int
 up_pwm_servo_set_rate(unsigned rate)
 {
-  
+  for (size_t i = 0; i < PWM_SERVO_MAX_TIMERS; ++i) {
+    up_pwm_servo_set_rate_group_update(i, rate);
+  }
   return 0;
 }
 
@@ -160,11 +162,28 @@ up_pwm_servo_get_rate_group(unsigned group)
 int
 up_pwm_servo_set_rate_group_update(unsigned group, unsigned rate)
 {
+  
+  /*
+   * rate = clock frequency / prescaler / modulo
+   *
+   * - clock 96MHz
+   * - prescaler 64
+   * - modulo 16-bit
+   * => minimum rate = 96E6/64/0xffff = 22.8 Hz
+   * => maximum rate = 96E6/64/1 => 1500000 Hz
+   * (use half to enable at least 2 pwm duty cycle levels)
+   */
+  if (rate < 23 || 750000 < rate) {
+    return -ERANGE;
+  }
+    
   const struct pwm_servo_timer* timer = &pwm_servo_timers[group];
-
-  putreg32(FTM_SC_PS_4, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+  
+  putreg32(FTM_SC_PS_64, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
   putreg32(0, timer->ftm_base + KINETIS_FTM_CNT_OFFSET);
-  putreg32(48000, timer->ftm_base + KINETIS_FTM_MOD_OFFSET);
+  putreg32(
+	   BOARD_CORECLK_FREQ / 64 / rate,
+	   timer->ftm_base + KINETIS_FTM_MOD_OFFSET);
   
   return 0;
 }
@@ -179,8 +198,10 @@ int
 up_pwm_servo_set(unsigned channel, servo_position_t value)
 {
   const struct pwm_servo_channel* ch = &pwm_servo_channels[channel];
-  
-  putreg32(value * 48000 / 2000, ch->timer->ftm_base + KINETIS_FTM_CV_OFFSET(ch->ftm_channel));
+
+  putreg32(
+	   BOARD_CORECLK_FREQ / 1000000 * ((uint32_t) value) / 64,
+	   ch->timer->ftm_base + KINETIS_FTM_CV_OFFSET(ch->ftm_channel));
   return 0;
 }
 
@@ -194,7 +215,10 @@ up_pwm_servo_set(unsigned channel, servo_position_t value)
 servo_position_t
 up_pwm_servo_get(unsigned channel)
 {
-  return 0;
+  const struct pwm_servo_channel* ch = &pwm_servo_channels[channel];
+  uint32_t reg = ch->timer->ftm_base + KINETIS_FTM_CV_OFFSET(ch->ftm_channel);
+  uint32_t mod = getreg32(reg);
+  return mod * 64 / (BOARD_CORECLK_FREQ/1000000);
 }
 
 
