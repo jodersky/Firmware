@@ -112,11 +112,16 @@ void up_pwm_servo_arm(bool armed)
 {
   for (size_t i = 0; i < PWM_SERVO_MAX_TIMERS; ++i) {
     const struct pwm_servo_timer* timer = &pwm_servo_timers[i];
+
+    uint32_t regval = getreg32(timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+    regval = regval & ~FTM_SC_CLKS_MASK;
     
     if (armed) {
-      putreg32(FTM_SC_CLKS_SYSCLK, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+      regval = regval | FTM_SC_CLKS_SYSCLK;
+      putreg32(regval, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
     } else {
-      putreg32(FTM_SC_CLKS_NONE, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+      regval = regval | FTM_SC_CLKS_NONE;
+      putreg32(regval, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
     }
     
   }
@@ -164,25 +169,34 @@ up_pwm_servo_set_rate_group_update(unsigned group, unsigned rate)
 {
   
   /*
-   * rate = clock frequency / prescaler / modulo
+   * ftm rate = bus frequency / prescaler
+   * rate = ftm rate / modulo
    *
-   * - clock 96MHz
-   * - prescaler 64
+   * - bus 48MHz
+   * - prescaler 32
    * - modulo 16-bit
-   * => minimum rate = 96E6/64/0xffff = 22.8 Hz
-   * => maximum rate = 96E6/64/1 => 1500000 Hz
-   * (use half to enable at least 2 pwm duty cycle levels)
+   * => minimum rate = 48E6/32/0xffff = 22.8 Hz
+   * => maximum rate = 48E6/32/1 => 1500000 Hz
+   * (arbitrarily limit to allow several duty cycle levels)
    */
-  if (rate < 23 || 750000 < rate) {
+  if (rate < 23 || 10000 < rate) {
     return -ERANGE;
   }
     
   const struct pwm_servo_timer* timer = &pwm_servo_timers[group];
+
+  //  uint32_t regval = getreg32(timer->ftm_base + KINETIS_FTM_MODE_OFFSET);
+  //putreg32(regval | FTM_MODE_WPDIS, timer->ftm_base + KINETIS_FTM_MODE_OFFSET);
+
   
-  putreg32(FTM_SC_PS_64, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+  uint32_t regval = getreg32(timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+  regval = regval & ~FTM_SC_PS_MASK;
+  regval = regval | FTM_SC_PS_32;
+  putreg32(regval, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
   putreg32(0, timer->ftm_base + KINETIS_FTM_CNT_OFFSET);
+  putreg32(0, timer->ftm_base + KINETIS_FTM_CNTIN_OFFSET);
   putreg32(
-	   BOARD_CORECLK_FREQ / 64 / rate,
+	   BOARD_BUS_FREQ / 32 / rate,
 	   timer->ftm_base + KINETIS_FTM_MOD_OFFSET);
   
   return 0;
@@ -200,7 +214,7 @@ up_pwm_servo_set(unsigned channel, servo_position_t value)
   const struct pwm_servo_channel* ch = &pwm_servo_channels[channel];
 
   putreg32(
-	   BOARD_CORECLK_FREQ / 1000000 * ((uint32_t) value) / 64,
+	   BOARD_BUS_FREQ / 1000000 * ((uint32_t) value) / 32,
 	   ch->timer->ftm_base + KINETIS_FTM_CV_OFFSET(ch->ftm_channel));
   return 0;
 }
@@ -218,7 +232,7 @@ up_pwm_servo_get(unsigned channel)
   const struct pwm_servo_channel* ch = &pwm_servo_channels[channel];
   uint32_t reg = ch->timer->ftm_base + KINETIS_FTM_CV_OFFSET(ch->ftm_channel);
   uint32_t mod = getreg32(reg);
-  return mod * 64 / (BOARD_CORECLK_FREQ/1000000);
+  return mod * 32 / (BOARD_BUS_FREQ/1000000);
 }
 
 
