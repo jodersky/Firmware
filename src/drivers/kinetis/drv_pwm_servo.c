@@ -81,7 +81,6 @@
        // configure pin
        kinetis_pinconfig(channel->pinconfig); 
      }
-
       
    }
 
@@ -167,6 +166,10 @@ up_pwm_servo_get_rate_group(unsigned group)
 int
 up_pwm_servo_set_rate_group_update(unsigned group, unsigned rate)
 {
+
+  if (group > PWM_SERVO_MAX_TIMERS) {
+    return -ERANGE;
+  }
   
   /*
    * ftm rate = bus frequency / prescaler
@@ -184,10 +187,6 @@ up_pwm_servo_set_rate_group_update(unsigned group, unsigned rate)
   }
     
   const struct pwm_servo_timer* timer = &pwm_servo_timers[group];
-
-  //  uint32_t regval = getreg32(timer->ftm_base + KINETIS_FTM_MODE_OFFSET);
-  //putreg32(regval | FTM_MODE_WPDIS, timer->ftm_base + KINETIS_FTM_MODE_OFFSET);
-
   
   uint32_t regval = getreg32(timer->ftm_base + KINETIS_FTM_SC_OFFSET);
   regval = regval & ~FTM_SC_PS_MASK;
@@ -211,6 +210,10 @@ up_pwm_servo_set_rate_group_update(unsigned group, unsigned rate)
 int
 up_pwm_servo_set(unsigned channel, servo_position_t value)
 {
+  if (channel > PWM_SERVO_MAX_CHANNELS) {
+    return -ERANGE;
+  }
+  
   const struct pwm_servo_channel* ch = &pwm_servo_channels[channel];
 
   putreg32(
@@ -229,6 +232,10 @@ up_pwm_servo_set(unsigned channel, servo_position_t value)
 servo_position_t
 up_pwm_servo_get(unsigned channel)
 {
+  if (channel > PWM_SERVO_MAX_CHANNELS) {
+    return -ERANGE;
+  }
+  
   const struct pwm_servo_channel* ch = &pwm_servo_channels[channel];
   uint32_t reg = ch->timer->ftm_base + KINETIS_FTM_CV_OFFSET(ch->ftm_channel);
   uint32_t mod = getreg32(reg);

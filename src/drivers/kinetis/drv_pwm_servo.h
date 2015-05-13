@@ -40,7 +40,7 @@
 #define KINETIS_PWM_SERVO_H
 
 #define PWM_SERVO_MAX_TIMERS 1
-#define PWM_SERVO_MAX_CHANNELS 1
+#define PWM_SERVO_MAX_CHANNELS 6
 
 #include <stdbool.h>
 #include <drivers/drv_pwm_output.h>
