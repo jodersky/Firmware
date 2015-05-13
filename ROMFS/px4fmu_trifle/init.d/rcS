@@ -1,2 +1,7 @@
 #!nsh
 # empty
+
+pwm 2000
+sleep 3
+pwm 1000
+sleep 3
