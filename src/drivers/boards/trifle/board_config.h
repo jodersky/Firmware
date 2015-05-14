@@ -4,8 +4,8 @@
 #include <nuttx/config.h>
 #include <stdbool.h>
 
-//totally random
-#define UDID_START 0x2000000
+extern uint32_t __device_id;
+#define UDID_START __device_id
 
 #define GPIO_LED0 (PIN_PORTC | PIN5 | GPIO_HIGHDRIVE | GPIO_OUTPUT_ONE)
 

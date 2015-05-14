@@ -69,6 +69,11 @@ SECTIONS
 		KEEP(*(.cfmconfig))
 	} > cfmprotect
 
+	.idconfig : {
+		__device_id = ABSOLUTE(.);
+		KEEP(*(.idconfig))
+	} > progflash
+	
 	.text : {
 		_stext = ABSOLUTE(.);
 		KEEP(*(.text .text.*))

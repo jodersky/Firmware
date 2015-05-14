@@ -178,5 +178,3 @@ void hrt_init(void)
 {
 	
 }
-
-__END_DECLS
