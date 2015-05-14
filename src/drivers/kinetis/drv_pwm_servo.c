@@ -57,35 +57,35 @@
  *			as GPIOs or as another function.
  * @return		OK on success.
  */
- int
- up_pwm_servo_init(uint32_t channel_mask)
- {
+int
+up_pwm_servo_init(uint32_t channel_mask)
+{
    
-   for (size_t i = 0; i < PWM_SERVO_MAX_TIMERS; ++i) {
+	for (size_t i = 0; i < PWM_SERVO_MAX_TIMERS; ++i) {
      
-     const struct pwm_servo_timer* timer = &pwm_servo_timers[i];
-     uint32_t regval;
+		const struct pwm_servo_timer* timer = &pwm_servo_timers[i];
+		uint32_t regval;
      
-     regval = getreg32(timer->scgc);
-     putreg32(regval | timer->scgc_enable, timer->scgc); // enable clock signal
-     up_pwm_servo_set_rate_group_update(i, 50); // 50Hz default
+		regval = getreg32(timer->scgc);
+		putreg32(regval | timer->scgc_enable, timer->scgc); // enable clock signal
+		up_pwm_servo_set_rate_group_update(i, 50); // 50Hz default
      
-   }
+	}
 
-   for (size_t i = 0; i < PWM_SERVO_MAX_CHANNELS; ++i) {
-     const struct pwm_servo_channel* channel = &pwm_servo_channels[i];
+	for (size_t i = 0; i < PWM_SERVO_MAX_CHANNELS; ++i) {
+		const struct pwm_servo_channel* channel = &pwm_servo_channels[i];
 
-     if ((1 << i) & channel_mask) {
-       // enable edge aligned pwm
-       putreg32(0x28, channel->timer->ftm_base + KINETIS_FTM_CSC_OFFSET(channel->ftm_channel));
-       // configure pin
-       kinetis_pinconfig(channel->pinconfig); 
-     }
+		if ((1 << i) & channel_mask) {
+			// enable edge aligned pwm
+			putreg32(0x28, channel->timer->ftm_base + KINETIS_FTM_CSC_OFFSET(channel->ftm_channel));
+			// configure pin
+			kinetis_pinconfig(channel->pinconfig); 
+		}
       
-   }
+	}
 
-   return 0;
- }
+	return 0;
+}
 
 /**
  * De-initialise the PWM servo outputs.
@@ -109,21 +109,21 @@ up_pwm_servo_deinit(void)
  */
 void up_pwm_servo_arm(bool armed)
 {
-  for (size_t i = 0; i < PWM_SERVO_MAX_TIMERS; ++i) {
-    const struct pwm_servo_timer* timer = &pwm_servo_timers[i];
+	for (size_t i = 0; i < PWM_SERVO_MAX_TIMERS; ++i) {
+		const struct pwm_servo_timer* timer = &pwm_servo_timers[i];
 
-    uint32_t regval = getreg32(timer->ftm_base + KINETIS_FTM_SC_OFFSET);
-    regval = regval & ~FTM_SC_CLKS_MASK;
+		uint32_t regval = getreg32(timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+		regval = regval & ~FTM_SC_CLKS_MASK;
     
-    if (armed) {
-      regval = regval | FTM_SC_CLKS_SYSCLK;
-      putreg32(regval, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
-    } else {
-      regval = regval | FTM_SC_CLKS_NONE;
-      putreg32(regval, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
-    }
+		if (armed) {
+			regval = regval | FTM_SC_CLKS_SYSCLK;
+			putreg32(regval, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+		} else {
+			regval = regval | FTM_SC_CLKS_NONE;
+			putreg32(regval, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+		}
     
-  }
+	}
 }
 
 
@@ -136,10 +136,10 @@ void up_pwm_servo_arm(bool armed)
 int
 up_pwm_servo_set_rate(unsigned rate)
 {
-  for (size_t i = 0; i < PWM_SERVO_MAX_TIMERS; ++i) {
-    up_pwm_servo_set_rate_group_update(i, rate);
-  }
-  return 0;
+	for (size_t i = 0; i < PWM_SERVO_MAX_TIMERS; ++i) {
+		up_pwm_servo_set_rate_group_update(i, rate);
+	}
+	return 0;
 }
 
 /**
@@ -153,7 +153,7 @@ up_pwm_servo_set_rate(unsigned rate)
 uint32_t
 up_pwm_servo_get_rate_group(unsigned group)
 {
-  return 0;
+	return 0;
 }
 
 /**
@@ -167,38 +167,38 @@ int
 up_pwm_servo_set_rate_group_update(unsigned group, unsigned rate)
 {
 
-  if (group > PWM_SERVO_MAX_TIMERS) {
-    return -ERANGE;
-  }
+	if (group > PWM_SERVO_MAX_TIMERS) {
+		return -ERANGE;
+	}
   
-  /*
-   * ftm rate = bus frequency / prescaler
-   * rate = ftm rate / modulo
-   *
-   * - bus 48MHz
-   * - prescaler 32
-   * - modulo 16-bit
-   * => minimum rate = 48E6/32/0xffff = 22.8 Hz
-   * => maximum rate = 48E6/32/1 => 1500000 Hz
-   * (arbitrarily limit to allow several duty cycle levels)
-   */
-  if (rate < 23 || 10000 < rate) {
-    return -ERANGE;
-  }
+	/*
+	 * ftm rate = bus frequency / prescaler
+	 * rate = ftm rate / modulo
+	 *
+	 * - bus 48MHz
+	 * - prescaler 32
+	 * - modulo 16-bit
+	 * => minimum rate = 48E6/32/0xffff = 22.8 Hz
+	 * => maximum rate = 48E6/32/1 => 1500000 Hz
+	 * (arbitrarily limit to allow several duty cycle levels)
+	 */
+	if (rate < 23 || 10000 < rate) {
+		return -ERANGE;
+	}
     
-  const struct pwm_servo_timer* timer = &pwm_servo_timers[group];
+	const struct pwm_servo_timer* timer = &pwm_servo_timers[group];
   
-  uint32_t regval = getreg32(timer->ftm_base + KINETIS_FTM_SC_OFFSET);
-  regval = regval & ~FTM_SC_PS_MASK;
-  regval = regval | FTM_SC_PS_32;
-  putreg32(regval, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
-  putreg32(0, timer->ftm_base + KINETIS_FTM_CNT_OFFSET);
-  putreg32(0, timer->ftm_base + KINETIS_FTM_CNTIN_OFFSET);
-  putreg32(
-	   BOARD_BUS_FREQ / 32 / rate,
-	   timer->ftm_base + KINETIS_FTM_MOD_OFFSET);
+	uint32_t regval = getreg32(timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+	regval = regval & ~FTM_SC_PS_MASK;
+	regval = regval | FTM_SC_PS_32;
+	putreg32(regval, timer->ftm_base + KINETIS_FTM_SC_OFFSET);
+	putreg32(0, timer->ftm_base + KINETIS_FTM_CNT_OFFSET);
+	putreg32(0, timer->ftm_base + KINETIS_FTM_CNTIN_OFFSET);
+	putreg32(
+		BOARD_BUS_FREQ / 32 / rate,
+		timer->ftm_base + KINETIS_FTM_MOD_OFFSET);
   
-  return 0;
+	return 0;
 }
 
 /**
@@ -210,16 +210,16 @@ up_pwm_servo_set_rate_group_update(unsigned group, unsigned rate)
 int
 up_pwm_servo_set(unsigned channel, servo_position_t value)
 {
-  if (channel > PWM_SERVO_MAX_CHANNELS) {
-    return -ERANGE;
-  }
+	if (channel > PWM_SERVO_MAX_CHANNELS) {
+		return -ERANGE;
+	}
   
-  const struct pwm_servo_channel* ch = &pwm_servo_channels[channel];
+	const struct pwm_servo_channel* ch = &pwm_servo_channels[channel];
 
-  putreg32(
-	   BOARD_BUS_FREQ / 1000000 * ((uint32_t) value) / 32,
-	   ch->timer->ftm_base + KINETIS_FTM_CV_OFFSET(ch->ftm_channel));
-  return 0;
+	putreg32(
+		BOARD_BUS_FREQ / 1000000 * ((uint32_t) value) / 32,
+		ch->timer->ftm_base + KINETIS_FTM_CV_OFFSET(ch->ftm_channel));
+	return 0;
 }
 
 /**
@@ -232,40 +232,12 @@ up_pwm_servo_set(unsigned channel, servo_position_t value)
 servo_position_t
 up_pwm_servo_get(unsigned channel)
 {
-  if (channel > PWM_SERVO_MAX_CHANNELS) {
-    return -ERANGE;
-  }
+	if (channel > PWM_SERVO_MAX_CHANNELS) {
+		return -ERANGE;
+	}
   
-  const struct pwm_servo_channel* ch = &pwm_servo_channels[channel];
-  uint32_t reg = ch->timer->ftm_base + KINETIS_FTM_CV_OFFSET(ch->ftm_channel);
-  uint32_t mod = getreg32(reg);
-  return mod * 32 / (BOARD_BUS_FREQ/1000000);
+	const struct pwm_servo_channel* ch = &pwm_servo_channels[channel];
+	uint32_t reg = ch->timer->ftm_base + KINETIS_FTM_CV_OFFSET(ch->ftm_channel);
+	uint32_t mod = getreg32(reg);
+	return mod * 32 / (BOARD_BUS_FREQ/1000000);
 }
-
-
-/*
-int helloworld_main(int args, char *argv[]) {
-  printf("Setting timer\n");
-
-  uint8_t ftm_channel = 5;
-  struct pwm_timer* timer = &pwm0;
-  
-
-  uint32_t regval;
-  regval = getreg32(timer->scgc);
-  putreg32(regval | timer->scgc_enable, timer->scgc); // enable clock signal to FTM0
-
-  putreg32(0, timer->ftm_base + KINETIS_FTM_CNT_OFFSET);
-  putreg32(36864, timer->ftm_base + KINETIS_FTM_MOD_OFFSET);
-  
-  putreg32(0x28, timer->ftm_base + KINETIS_FTM_CSC_OFFSET(ftm_channel)); // channle, enable edge aligned pwm
-
-  putreg32(FTM_SC_CLKS_SYSCLK | FTM_SC_PS_1, timer->ftm_base + KINETIS_FTM_SC_OFFSET); // set clock source of FTM module
-  putreg32(atoi(argv[1]), timer->ftm_base + KINETIS_FTM_CV_OFFSET(ftm_channel));
-
-  kinetis_pinconfig(PIN_PORTD | PIN5 |  PIN_ALT4_OUTPUT | PIN_ALT4_HIGHDRIVE ) ;
-  
-  printf("Done\n");
-  return 0;
-}
-*/

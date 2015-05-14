@@ -50,7 +50,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <stm32_pwr.h>
+#ifdef CONFIG_ARCH_CHIP_STM32
+  #include <stm32_pwr.h>
+#endif
 
 #include "systemlib.h"
 
@@ -60,13 +62,15 @@ extern void up_systemreset(void) noreturn_function;
 void
 systemreset(bool to_bootloader)
 {
+#ifdef CONFIG_ARCH_CHIP_STM32
 	if (to_bootloader) {
 		stm32_pwr_enablebkp();
 
 		/* XXX wow, this is evil - write a magic number into backup register zero */
 		*(uint32_t *)0x40002850 = 0xb007b007;
 	}
-
+#endif
+    
 	up_systemreset();
 
 	/* lock up here */
