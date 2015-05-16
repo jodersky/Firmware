@@ -36,7 +36,21 @@ This repository contains code supporting these boards:
   * FMUv1.x
   * FMUv2.x
   * AeroCore (v1 and v2)
+  * work in progress to support [Trifle, DIY board](https://github.com/jodersky/trifle).
 
+#### Trifle Support Roadmap
+
+  - [x] Port basic NuttX functionality to the Kinetis K20 SoC family.
+  - [x] Integrate new board into PX4 build system.
+  - [x] Get shell and demo apps running.
+  - [x] Implement basic modules: CXX, driver abstraction.
+  - [x] PWM, motor control.
+  - [x] Port systemlib, enable uORB.
+  - [ ] High resolution timer
+  - [ ] I2C
+  - [ ] ADC
+  - [ ] Sensors
+  
 ## NuttShell (NSH) ##
 
 NSH usage documentation:
